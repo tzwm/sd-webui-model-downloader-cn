@@ -26,9 +26,9 @@ def request_civitai_detail(url):
     else:
         return False, res.text
 
-def resp_to_preview_component(resp):
+def resp_to_components(resp):
     if resp == None:
-        return ["", "", "", "", "", "", "", ""]
+        return ["", "", "", "", "", "", "", "", ""]
 
     return [
         resp["name"],
@@ -38,6 +38,7 @@ def resp_to_preview_component(resp):
         ", ".join(resp["tags"]),
         resp["version"]["updatedAt"],
         resp["description"],
+        resp["version"]["file"]["name"],
         resp["version"]["file"]["downloadUrl"],
     ]
 
@@ -45,21 +46,20 @@ def resp_to_preview_component(resp):
 def preview(url):
     ok, resp = request_civitai_detail(url)
     if not ok:
-        return [resp] + resp_to_preview_component(None) + [gr.update(interactive=False)]
-
+        return [resp] + resp_to_components(None) + [gr.update(interactive=False)]
 
     has_download_file = False
     if resp["version"]["file"]["downloadUrl"]:
         has_download_file = True
 
-    return ["预览成功"] + resp_to_preview_component(resp) + \
+    return ["预览成功"] + resp_to_components(resp) + \
             [gr.update(value=f'下载模型\n{resp["version"]["file"]["name"]}', interactive=has_download_file)]
 
 
-def trigger_download(file_info, target_path, result_text):
-    cmd = f'curl -o {os.path.join(target_path, file_info["name"])} "{file_info["downloadUrl"]}"'
+def trigger_download(filename, url, target_path):
+    cmd = f'curl -o {os.path.join(target_path, filename)} "{url}"'
     if check_aria2c():
-        cmd = f'aria2c -c -x 16 -s 16 -k 1M -d {target_path} -o {file_info["name"]} "{file_info["downloadUrl"]}"'
+        cmd = f'aria2c -c -x 16 -s 16 -k 1M -d {target_path} -o {filename} "{url}"'
     print(cmd)
 
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
@@ -70,24 +70,19 @@ def trigger_download(file_info, target_path, result_text):
             break
 
         outputs = "\n".join([outputs, line.decode('utf-8').strip()])
-        print(outputs)
-        result_text.update(outputs)
+
+    return outputs
 
 
-def download(url, result_text):
-    ok, info = request_civitai_info(url)
-    if not ok:
-        result_text.update(info)
-        return
+def download(model_type, filename, url):
+    if not (model_type and url and filename):
+        return "下载信息缺失"
 
-    update_model_info_to_ui(info)
-
-    target_path = get_model_path(info["type"])
+    target_path = get_model_path(model_type)
     if not target_path:
-        result_text.update("暂不支持这种类型：")
-        return
+        return f"暂不支持这种类型：{model_type}"
 
-    trigger_download(info["version"]["file"], target_path, result_text)
+    return trigger_download(filename, url, target_path)
 
 
 def on_ui_tabs():
@@ -117,12 +112,21 @@ def on_ui_tabs():
                 with gr.Accordion("介绍", open=False):
                     description = gr.HTML()
         with gr.Row(visible=False):
-            download_url = gr.Textbox(label="下载地址", interactive=False)
+            filename = gr.Textbox(
+                visible=False,
+                label="model_filename",
+                interactive=False,
+            )
+            download_url = gr.Textbox(
+                visible=False,
+                label="model_download_url",
+                interactive=False,
+            )
         with gr.Row():
             gr.Markdown("test")
 
 
-        def preview_outputs():
+        def preview_components():
             return [
                 name,
                 model_type,
@@ -131,17 +135,23 @@ def on_ui_tabs():
                 tags,
                 updated_at,
                 description,
+            ]
+
+        def file_info_components():
+            return [
+                filename,
                 download_url,
             ]
 
         preview_btn.click(
             fn=preview,
             inputs=[inp_url],
-            outputs=[result] + preview_outputs() + [download_btn],
+            outputs=[result] + preview_components() + \
+                file_info_components() + [download_btn]
         )
         download_btn.click(
             fn=download,
-            inputs=[download_url],
+            inputs=[model_type] + file_info_components(),
             outputs=[result]
         )
 
