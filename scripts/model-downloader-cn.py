@@ -9,6 +9,7 @@ import threading
 
 from scripts.util import check_aria2c, get_model_path
 
+ONLINE_DOCS_URL = "https://raw.fastgit.org/tzwm/sd-webui-model-downloader-cn/main/docs/"
 API_URL = "http://127.0.0.1:8787/"
 RESULT_PATH = "tmp/model-downloader-cn.log"
 
@@ -91,9 +92,26 @@ def download(model_type, filename, url):
     return status_output + subprocess.getoutput(f"cat {RESULT_PATH}")
 
 
+def request_online_docs():
+    banner = "## 加载失败，建议更新插件：\nhttps://github.com/tzwm/sd-webui-model-downloader-cn"
+    footer = "## 交流互助群\n![](https://oss.talesofai.cn/public/qrcode_20230413-183818.png?cc0429)"
+
+    res = requests.get(ONLINE_DOCS_URL + "banner.md")
+    if res.ok:
+        banner = res.text
+
+    res = requests.get(ONLINE_DOCS_URL + "footer.md")
+    if res.ok:
+        footer = res.text
+
+    return banner, footer
+
+
 def on_ui_tabs():
+    banner, footer = request_online_docs()
+
     with gr.Blocks() as ui_component:
-        gr.Markdown("Start typing below and then click **Run** to see the output.")
+        gr.Markdown(banner)
         with gr.Row() as input_component:
             with gr.Column():
                 inp_url = gr.Textbox(
@@ -131,7 +149,7 @@ def on_ui_tabs():
                 interactive=False,
             )
         with gr.Row():
-            gr.Markdown("test")
+            gr.Markdown(footer)
 
 
         def preview_components():
