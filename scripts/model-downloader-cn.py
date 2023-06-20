@@ -1,4 +1,3 @@
-from scipy.optimize._lsq.least_squares import construct_loss_function
 import modules.scripts as scripts
 from modules import script_callbacks
 import gradio as gr
@@ -11,6 +10,14 @@ import threading
 from scripts.util import check_aria2c, get_model_path
 
 API_URL = "http://127.0.0.1:8787/"
+RESULT_PATH = "tmp/model-downloader-cn.log"
+
+def result_update():
+    try:
+        with open(RESULT_PATH, 'r') as f:
+            return f.read()
+    except FileNotFoundError:
+        pass
 
 def request_civitai_detail(url):
     pattern = r'https://civitai\.com/(.+)'
@@ -49,29 +56,14 @@ def preview(url):
         return [resp] + resp_to_components(None) + [gr.update(interactive=False)]
 
     has_download_file = False
+    more_guides = ""
     if resp["version"]["file"]["downloadUrl"]:
         has_download_file = True
-
-    return ["预览成功"] + resp_to_components(resp) + \
-            [gr.update(value=f'下载模型\n{resp["version"]["file"]["name"]}', interactive=has_download_file)]
+        more_guides = f'，点击下载按钮\n{resp["version"]["file"]["name"]}'
 
 
-def trigger_download(filename, url, target_path):
-    cmd = f'curl -o {os.path.join(target_path, filename)} "{url}"'
-    if check_aria2c():
-        cmd = f'aria2c -c -x 16 -s 16 -k 1M -d {target_path} -o {filename} "{url}"'
-    print(cmd)
-
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-    outputs = ""
-    while True:
-        line = p.stdout.readline()
-        if not line:
-            break
-
-        outputs = "\n".join([outputs, line.decode('utf-8').strip()])
-
-    return outputs
+    return [f"预览成功{more_guides}"] + resp_to_components(resp) + \
+            [gr.update(interactive=has_download_file)]
 
 
 def download(model_type, filename, url):
@@ -82,7 +74,21 @@ def download(model_type, filename, url):
     if not target_path:
         return f"暂不支持这种类型：{model_type}"
 
-    return trigger_download(filename, url, target_path)
+    target_file = os.path.join(target_path, filename)
+    if os.path.exists(target_file):
+        return f"已经存在了，不重复下载：\n{target_file}"
+
+
+    cmd = f'curl -o {target_file} "{url}" > {RESULT_PATH} 2>&1'
+    if check_aria2c():
+        cmd = f'aria2c -c -x 16 -s 16 -k 1M -d {target_path} -o {filename} "{url}" > {RESULT_PATH} 2>&1'
+
+    status, _ = subprocess.getstatusoutput(cmd)
+    status_output = "下载失败了，错误信息：\n"
+    if status == 0:
+        status_output = f"下载成功，保存到：\n{target_file}\n"
+
+    return status_output + subprocess.getoutput(f"cat {RESULT_PATH}")
 
 
 def on_ui_tabs():
@@ -92,15 +98,17 @@ def on_ui_tabs():
             with gr.Column():
                 inp_url = gr.Textbox(
                     label="Civitai 模型的页面地址，不是下载链接",
-                    placeholder="https://civitai.com/models/9409"
+                    placeholder="https://civitai.com/models/28687/pen-sketch-style"
                 )
                 with gr.Row():
                     preview_btn = gr.Button("预览")
                     download_btn = gr.Button("下载", interactive=False)
                 with gr.Row():
-                    result = gr.TextArea(
+                    result = gr.Textbox(
+                        # value=result_update,
                         label="执行结果",
-                        interactive=False
+                        interactive=False,
+                        # every=1,
                     )
             with gr.Column() as preview_component:
                 name = gr.Textbox(label="名称", interactive=False)
