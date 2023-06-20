@@ -1,1 +1,1 @@
-![](https://raw.fastgit.org/tzwm/sd-webui-model-downloader-cn/main/docs/banner_url_tips.png)
+![](https://oss.talesofai.cn/public/banner_url_tips.png)

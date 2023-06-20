@@ -4,6 +4,7 @@ import subprocess
 from modules import shared
 from modules.paths_internal import models_path, data_path
 
+VERSION = "v1.0.0"
 
 def check_aria2c():
     try:
