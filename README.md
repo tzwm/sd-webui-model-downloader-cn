@@ -11,13 +11,31 @@
 
 ### 直接通过 webui 安装（推荐）
 
+![](https://raw.githubusercontent.com/tzwm/sd-webui-model-downloader-cn/main/docs/extension_install.png)
 
-### 通过命令行安装
+
+### 下载安装
+
+1. 下载这个仓库所有文件
+2. 解压后把整个文件夹扔进 webui 目录下的 extensions 目录下
+3. 重启 webui
+
+### 命令行安装
+
+1. 通过命令行进入 webui 的文件夹
+2. 执行
+
+```
+cd extensions && git clone --depth 1 https://github.com/tzwm/sd-webui-model-downloader-cn.git
+```
+
+3. 重启 webui
 
 ## 使用
 
 ### 下载不同版本的模型
 
+![](https://raw.githubusercontent.com/tzwm/sd-webui-model-downloader-cn/main/docs/banner_url_tips.png)
 
 ## TODO
 
