@@ -1,5 +1,6 @@
 import modules.scripts as scripts
-from modules import script_callbacks
+from modules.paths_internal import models_path, data_path
+from modules import script_callbacks, shared
 import gradio as gr
 import requests
 import os
@@ -7,18 +8,42 @@ import re
 import subprocess
 import threading
 
-from scripts.util import check_aria2c, get_model_path, VERSION
 
 ONLINE_DOCS_URL = "https://raw.fastgit.org/tzwm/sd-webui-model-downloader-cn/main/docs/"
 API_URL = "https://api.ai2cc.com/"
 RESULT_PATH = "tmp/model-downloader-cn.log"
+VERSION = "v1.0.1"
 
-def result_update():
+def check_aria2c():
     try:
-        with open(RESULT_PATH, 'r') as f:
-            return f.read()
+        subprocess.run("aria2c", stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
     except FileNotFoundError:
-        pass
+        return False
+
+def get_model_path(model_type):
+    co = shared.cmd_opts
+    pj = os.path.join
+    MODEL_TYPE_DIR = {
+        "Checkpoint": ["ckpt_dir", pj(models_path, 'Stable-diffusion')],
+        "LORA": ["lora_dir", pj(models_path, 'Lora')],
+        "TextualInversion": ["embeddings_dir", pj(data_path, 'embeddings')],
+        "Hypernetwork": ["hypernetwork_dir", pj(models_path, 'hypernetworks')],
+        # "AestheticGradient": "",
+        # "Controlnet": "", #controlnet-dir
+        "LoCon": ["lyco_dir", pj(models_path, 'LyCORIS')],
+        "VAE": ["vae_dir", pj(models_path, 'VAE')],
+    }
+
+    dir_list = MODEL_TYPE_DIR.get(model_type)
+    if dir_list == None:
+        return None
+
+    if hasattr(co, dir_list[0]) and getattr(co, dir_list[0]):
+        return getattr(co, dir_list[0])
+    else:
+        return dir_list[1]
+
 
 def request_civitai_detail(url):
     pattern = r'https://civitai\.com/(.+)'
