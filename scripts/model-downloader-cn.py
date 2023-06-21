@@ -10,7 +10,7 @@ import threading
 from scripts.util import check_aria2c, get_model_path, VERSION
 
 ONLINE_DOCS_URL = "https://raw.fastgit.org/tzwm/sd-webui-model-downloader-cn/main/docs/"
-API_URL = "http://127.0.0.1:8787/"
+API_URL = "https://api.ai2cc.com/"
 RESULT_PATH = "tmp/model-downloader-cn.log"
 
 def result_update():
@@ -149,7 +149,7 @@ def on_ui_tabs():
                 interactive=False,
             )
         with gr.Row():
-            gr.Markdown(f"版本：{VERSION}\n作者：@tzwm\n{footer}")
+            gr.Markdown(f"版本：{VERSION}\n\n作者：@tzwm\n{footer}")
 
 
         def preview_components():
