@@ -141,7 +141,7 @@ def on_ui_tabs():
             with gr.Column():
                 inp_url = gr.Textbox(
                     label="Civitai 模型的页面地址，不是下载链接",
-                    placeholder="https://civitai.com/models/28687/pen-sketch-style"
+                    placeholder="类似 https://civitai.com/models/28687/pen-sketch-style"
                 )
                 with gr.Row():
                     preview_btn = gr.Button("预览")
