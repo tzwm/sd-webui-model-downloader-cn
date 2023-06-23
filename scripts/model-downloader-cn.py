@@ -105,16 +105,24 @@ def download(model_type, filename, url):
         return f"已经存在了，不重复下载：\n{target_file}"
 
 
-    cmd = f'curl -o {target_file} "{url}" > {RESULT_PATH} 2>&1'
+    cmd = f'curl -o {target_file} "{url}" 2>&1'
     if check_aria2c():
-        cmd = f'aria2c -c -x 16 -s 16 -k 1M -d {target_path} -o {filename} "{url}" > {RESULT_PATH} 2>&1'
+        cmd = f'aria2c -c -x 16 -s 16 -k 1M -d {target_path} -o {filename} "{url}" 2>&1'
 
-    status, _ = subprocess.getstatusoutput(cmd)
-    status_output = "下载失败了，错误信息：\n"
-    if status == 0:
-        status_output = f"下载成功，保存到：\n{target_file}\n"
+    result = subprocess.run(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        encoding="UTF-8"
+    )
+    status_output = ""
+    if result.returncode == 0:
+        status_output = f"下载成功，保存到：\n{target_file}\n{result.stdout}"
+    else:
+        status_output = f"下载失败了，错误信息：\n{result.stdout}"
 
-    return status_output + subprocess.getoutput(f"cat {RESULT_PATH}")
+    return status_output
 
 
 def request_online_docs():
