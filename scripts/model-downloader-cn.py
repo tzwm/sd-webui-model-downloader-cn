@@ -12,7 +12,7 @@ import threading
 ONLINE_DOCS_URL = "https://raw.fastgit.org/tzwm/sd-webui-model-downloader-cn/main/docs/"
 API_URL = "https://api.ai2cc.com/"
 RESULT_PATH = "tmp/model-downloader-cn.log"
-VERSION = "v1.0.1"
+VERSION = "v1.0.2"
 
 def check_aria2c():
     try:
