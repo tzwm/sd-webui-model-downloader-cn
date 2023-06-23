@@ -2,9 +2,10 @@ import os
 import launch
 import platform
 import subprocess
-from scripts.util import check_aria2c
+import importlib  
+mdc = importlib.import_module("scripts.model-downloader-cn")
 
-has_aria2c = check_aria2c()
+has_aria2c = mdc.check_aria2c()
 
 if platform.system() == "Linux":
     if not has_aria2c:
