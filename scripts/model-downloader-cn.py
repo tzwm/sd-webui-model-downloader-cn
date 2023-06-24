@@ -1,6 +1,7 @@
 import modules.scripts as scripts
 from modules.paths_internal import models_path, data_path
 from modules import script_callbacks, shared
+from PIL import Image
 import gradio as gr
 import requests
 import os
@@ -14,12 +15,18 @@ API_URL = "https://api.ai2cc.com/"
 RESULT_PATH = "tmp/model-downloader-cn.log"
 VERSION = "v1.0.2"
 
+
 def check_aria2c():
     try:
         subprocess.run("aria2c", stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True
     except FileNotFoundError:
         return False
+
+def process_image(url):
+    response = requests.get(url, stream=True)
+    image = Image.open(response.raw)
+    return image
 
 def get_model_path(model_type):
     co = shared.cmd_opts
@@ -61,7 +68,11 @@ def request_civitai_detail(url):
 
 def resp_to_components(resp):
     if resp == None:
-        return ["", "", "", "", "", "", "", "", ""]
+        return ["", "", "", "", "", "", "", "", "", ""]
+
+    img = resp["version"]["image"]["url"]
+    if img:
+        img = process_image(img)
 
     return [
         resp["name"],
@@ -71,6 +82,7 @@ def resp_to_components(resp):
         ", ".join(resp["tags"]),
         resp["version"]["updatedAt"],
         resp["description"],
+        img,
         resp["version"]["file"]["name"],
         resp["version"]["file"]["downloadUrl"],
     ]
@@ -162,12 +174,19 @@ def on_ui_tabs():
                         # every=1,
                     )
             with gr.Column() as preview_component:
-                name = gr.Textbox(label="名称", interactive=False)
-                model_type = gr.Textbox(label="类型", interactive=False)
-                trained_words = gr.Textbox(label="触发词", interactive=False)
-                creator = gr.Textbox(label="作者", interactive=False)
-                tags = gr.Textbox(label="标签", interactive=False)
-                updated_at = gr.Textbox(label="最近更新时间", interactive=False)
+                with gr.Row():
+                    with gr.Column() as model_info_component:
+                        name = gr.Textbox(label="名称", interactive=False)
+                        model_type = gr.Textbox(label="类型", interactive=False)
+                        trained_words = gr.Textbox(label="触发词", interactive=False)
+                        creator = gr.Textbox(label="作者", interactive=False)
+                        tags = gr.Textbox(label="标签", interactive=False)
+                        updated_at = gr.Textbox(label="最近更新时间", interactive=False)
+                    with gr.Column() as model_image_component:
+                        image = gr.Image(
+                            show_label=False,
+                            interactive=False,
+                        )
                 with gr.Accordion("介绍", open=False):
                     description = gr.HTML()
         with gr.Row(visible=False):
@@ -194,6 +213,7 @@ def on_ui_tabs():
                 tags,
                 updated_at,
                 description,
+                image,
             ]
 
         def file_info_components():
