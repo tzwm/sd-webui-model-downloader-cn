@@ -2,6 +2,7 @@ import modules.scripts as scripts
 from modules.paths_internal import models_path, data_path
 from modules import script_callbacks, shared
 from PIL import Image
+import numpy as np
 import gradio as gr
 import requests
 import os
@@ -13,7 +14,7 @@ import threading
 ONLINE_DOCS_URL = "https://raw.fastgit.org/tzwm/sd-webui-model-downloader-cn/main/docs/"
 API_URL = "https://api.ai2cc.com/"
 RESULT_PATH = "tmp/model-downloader-cn.log"
-VERSION = "v1.0.2"
+VERSION = "v1.1.0"
 
 
 def check_aria2c():
@@ -104,13 +105,20 @@ def preview(url):
             [gr.update(interactive=has_download_file)]
 
 
-def download(model_type, filename, url):
+def download(model_type, filename, url, image_arr):
     if not (model_type and url and filename):
         return "下载信息缺失"
 
     target_path = get_model_path(model_type)
     if not target_path:
         return f"暂不支持这种类型：{model_type}"
+
+    if isinstance(image_arr, np.ndarray) and image_arr.any() is not None:
+        image_filename = filename.rsplit(".", 1)[0] + ".jpeg"
+        target_file = os.path.join(target_path, image_filename)
+        if not os.path.exists(target_file):
+            image = Image.fromarray(image_arr)
+            image.save(target_file)
 
     target_file = os.path.join(target_path, filename)
     if os.path.exists(target_file):
@@ -230,7 +238,7 @@ def on_ui_tabs():
         )
         download_btn.click(
             fn=download,
-            inputs=[model_type] + file_info_components(),
+            inputs=[model_type] + file_info_components() + [image],
             outputs=[result]
         )
 
