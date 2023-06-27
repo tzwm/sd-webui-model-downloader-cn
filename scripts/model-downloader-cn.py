@@ -14,7 +14,7 @@ import threading
 ONLINE_DOCS_URL = "https://raw.fastgit.org/tzwm/sd-webui-model-downloader-cn/main/docs/"
 API_URL = "https://api.ai2cc.com/"
 RESULT_PATH = "tmp/model-downloader-cn.log"
-VERSION = "v1.1.1"
+VERSION = "v1.1.2"
 
 
 def check_aria2c():
@@ -125,9 +125,9 @@ def download(model_type, filename, url, image_arr):
         return f"已经存在了，不重复下载：\n{target_file}"
 
 
-    cmd = f'curl -o {target_file} "{url}" 2>&1'
+    cmd = f'curl -o "{target_file}" "{url}" 2>&1'
     if check_aria2c():
-        cmd = f'aria2c -c -x 16 -s 16 -k 1M -d {target_path} -o {filename} "{url}" 2>&1'
+        cmd = f'aria2c -c -x 16 -s 16 -k 1M -d "{target_path}" -o "{filename}" "{url}" 2>&1'
 
     result = subprocess.run(
         cmd,
