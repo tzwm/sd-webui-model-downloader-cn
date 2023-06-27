@@ -1,17 +1,19 @@
 ## sd-webui-model-downloader-cn
 
+> 视频演示: https://www.bilibili.com/video/BV11u411a7wB/
+
 - 国内免梯子高速下载 civitai 模型
 - 一键下载，自动识别模型类型、自动选择下载路径
 - 支持 Checkpoint、LoRA、LyCORIS、VAE、TextualInversion(embedding)、Hypernetwork
 
-![](https://raw.githubusercontent.com/tzwm/sd-webui-model-downloader-cn/main/docs/preview.png)
+![](https://files.tzwm.me/images/sd-webui-model-downloader-cn/preview.png)
 
 
 ## 安装方式
 
 ### 直接通过 webui 安装（推荐）
 
-![](https://raw.githubusercontent.com/tzwm/sd-webui-model-downloader-cn/main/docs/extension_install.png)
+![](https://files.tzwm.me/images/sd-webui-model-downloader-cn/extension_install.png)
 
 
 ### 下载安装
@@ -35,7 +37,7 @@ cd extensions && git clone --depth 1 https://github.com/tzwm/sd-webui-model-down
 
 ### 下载不同版本的模型
 
-![](https://raw.githubusercontent.com/tzwm/sd-webui-model-downloader-cn/main/docs/banner_url_tips.png)
+![](https://files.tzwm.me/images/sd-webui-model-downloader-cn/banner_url_tips.png)
 
 ## TODO
 
