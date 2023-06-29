@@ -14,7 +14,7 @@ import threading
 ONLINE_DOCS_URL = "https://raw.fastgit.org/tzwm/sd-webui-model-downloader-cn/main/docs/"
 API_URL = "https://api.ai2cc.com/"
 RESULT_PATH = "tmp/model-downloader-cn.log"
-VERSION = "v1.1.2"
+VERSION = "v1.1.3"
 
 
 def check_aria2c():
@@ -54,13 +54,18 @@ def get_model_path(model_type):
 
 
 def request_civitai_detail(url):
-    pattern = r'https://civitai\.com/(.+)'
+    pattern = r'https://civitai\.com/models/(.+)'
     m = re.match(pattern, url)
     if not m:
-        return False, "不是一个有效的 civitai 页面链接"
+        return False, "不是一个有效的 civitai 模型页面链接，暂不支持"
 
-    req_url = API_URL + "civitai/" + m.group(1)
+    req_url = API_URL + "civitai/models/" + m.group(1)
     res = requests.get(req_url)
+
+    if res.status_code >= 500:
+        return False, "呃 服务好像挂了，理论上我应该在修了，可以进群看看进度……"
+    if res.status_code >= 400:
+        return False, "不是一个有效的 civitai 模型页面链接，暂不支持"
 
     if res.ok:
         return True, res.json()
@@ -69,7 +74,7 @@ def request_civitai_detail(url):
 
 def resp_to_components(resp):
     if resp == None:
-        return ["", "", "", "", "", "", "", "", "", ""]
+        return [None, None, None, None, None, None, None, None, None, None]
 
     img = resp["version"]["image"]["url"]
     if img:
