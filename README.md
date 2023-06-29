@@ -5,6 +5,7 @@
 - 国内免梯子高速下载 civitai 模型
 - 一键下载，自动识别模型类型、自动选择下载路径
 - 支持 Checkpoint、LoRA、LyCORIS、VAE、TextualInversion(embedding)、Hypernetwork
+- 支持模型图片预览，并且自动下载模型图片到模型同目录下
 
 ![](https://files.tzwm.me/images/sd-webui-model-downloader-cn/preview.png)
 
@@ -42,7 +43,7 @@ cd extensions && git clone --depth 1 https://github.com/tzwm/sd-webui-model-down
 ## TODO
 
 - [ ] 下载进度显示
-- [ ] 预览更多模型信息，包括图片等
+- [x] 预览更多模型信息，包括图片等
 - [ ] 模型推荐
 
 ## 交流互助
@@ -54,6 +55,10 @@ cd extensions && git clone --depth 1 https://github.com/tzwm/sd-webui-model-down
 
 ## ChangeLog
 
+- v1.1.3 20230629
+  - 修复了一下输入错误的地址的报错问题
+- v1.1.0 20230624
+  - 增加了模型图片预览，并且自动下载模型图片到模型同目录下
 - v1.0.1 20230621
   - 尝试修复某些平台 util.py 文件加载不出来的问题
 - v1.0.0 20230621
