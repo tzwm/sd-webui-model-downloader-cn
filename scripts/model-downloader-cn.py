@@ -11,8 +11,8 @@ import subprocess
 import threading
 
 
-ONLINE_DOCS_URL = "https://raw.fastgit.org/tzwm/sd-webui-model-downloader-cn/main/docs/"
 API_URL = "https://api.ai2cc.com/"
+ONLINE_DOCS_URL = API_URL + "docs/"
 RESULT_PATH = "tmp/model-downloader-cn.log"
 VERSION = "v1.1.3"
 
