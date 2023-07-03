@@ -14,7 +14,7 @@ import threading
 API_URL = "https://api.ai2cc.com/"
 ONLINE_DOCS_URL = API_URL + "docs/"
 RESULT_PATH = "tmp/model-downloader-cn.log"
-VERSION = "v1.1.3"
+VERSION = "v1.1.4"
 
 
 def check_aria2c():
@@ -151,16 +151,19 @@ def download(model_type, filename, url, image_arr):
 
 
 def request_online_docs():
-    banner = "## 加载失败，建议更新插件：\nhttps://github.com/tzwm/sd-webui-model-downloader-cn"
+    banner = "## 加载失败，可以更新插件试试：\nhttps://github.com/tzwm/sd-webui-model-downloader-cn"
     footer = "## 交流互助群\n![](https://oss.talesofai.cn/public/qrcode_20230413-183818.png?cc0429)"
 
-    res = requests.get(ONLINE_DOCS_URL + "banner.md")
-    if res.ok:
-        banner = res.text
+    try:
+        res = requests.get(ONLINE_DOCS_URL + "banner.md")
+        if res.ok:
+            banner = res.text
 
-    res = requests.get(ONLINE_DOCS_URL + "footer.md")
-    if res.ok:
-        footer = res.text
+        res = requests.get(ONLINE_DOCS_URL + "footer.md")
+        if res.ok:
+            footer = res.text
+    except Exception as e:
+        print("sd-webui-model-downloader-cn 文档请求失败")
 
     return banner, footer
 
