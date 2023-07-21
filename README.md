@@ -45,6 +45,7 @@ cd extensions && git clone --depth 1 https://github.com/tzwm/sd-webui-model-down
 - [ ] 下载进度显示
 - [x] 预览更多模型信息，包括图片等
 - [ ] 模型推荐
+- [ ] 下载 LoRA 后自动生成一个 wildcard 文件包含触发词，方便后续一键触发不用到处找触发词
 
 ## 交流互助
 
