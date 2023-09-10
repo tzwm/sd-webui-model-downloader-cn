@@ -1,0 +1,3 @@
+[submodule "good-to-nie"]
+	path = good-to-nie
+	url = git@github.com:tzwm/good-to-nie.git
