@@ -15,7 +15,7 @@ def on_ui_tabs():
             path = f"{pre_path}/index.html?timestamp={int(time.time())}"
             gr.HTML(f"""
                 <iframe id="model_downloader_cn_frame" src="{html.escape(path)}"
-                  style="width: 100%; height: 640;"></iframe>
+                  style="width: 100%; height: 640px;"></iframe>
             """)
 
     return [(view, "好捏模型", "model_downloader_cn_tab")]
