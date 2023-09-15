@@ -11,7 +11,7 @@ import subprocess
 import threading
 
 
-API_URL = "https://api.ai2cc.com/"
+API_URL = "https://api.tzone03.xyz/"
 ONLINE_DOCS_URL = API_URL + "docs/"
 RESULT_PATH = "tmp/model-downloader-cn.log"
 VERSION = "v1.1.4"
