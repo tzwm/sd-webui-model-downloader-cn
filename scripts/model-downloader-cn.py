@@ -3,6 +3,7 @@ from modules import script_callbacks, shared
 from modules.paths_internal import models_path, data_path
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import gradio as gr
 import html
 import os
@@ -102,6 +103,21 @@ def on_ui_tabs():
 
 def on_app_started(_: gr.Blocks, app: FastAPI):
     os.makedirs(RESULT_PATH, exist_ok=True)
+
+    #for local testing
+    origins = [
+        'http://localhost',
+        'http://127.0.0.1',
+        'http://127.0.0.1:5173',
+        'http://localhost:5173',
+    ]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     @app.post(pre_path + "/download_tasks/")
     async def create_download_task(
