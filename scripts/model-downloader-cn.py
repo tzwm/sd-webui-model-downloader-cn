@@ -167,9 +167,23 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
 
         return info
 
-    @app.post(pre_path + "/download_tasks")
+    @app.get(pre_path + "/download_tasks")
     def get_download_tasks():
-        return "TODO"
+        cmd = ' | '.join([f"ls -lt {RESULT_PATH}", "grep '.json$'", "awk '{print $NF}'"])
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="UTF-8"
+        )
+
+        ids = [s[:-5] for s in result.stdout.split('\n')]
+        ids = [s for s in ids if s != '']
+
+        return {
+            'task_ids': ids
+        }
 
     static_path = os.path.join(current_path, '..', 'good-to-nie', 'build')
     app.mount(
