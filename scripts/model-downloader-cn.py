@@ -1,22 +1,18 @@
 import uuid
 from modules import script_callbacks, shared
 from modules.paths_internal import models_path, data_path
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from typing import Optional, Annotated
 import gradio as gr
 import html
 import os
 import time
-from PIL import Image
-import numpy as np
 import subprocess
 import json
 
 pre_path = "/model_downloader_cn"
 current_path = os.path.dirname(os.path.abspath(__file__))
-RESULT_PATH = "tmp/model-downloader-cn"
+RESULT_PATH = os.path.join('tmp', 'model-downloader-cn')
 
 TASK_STATUS = {
     "downloading": "downloading",
@@ -54,21 +50,22 @@ def get_model_path(model_type):
     else:
         return dir_list[1]
 
-def download_model(model_type, filename, url, output_path):
-    if not (model_type and url and filename):
-        return False, "下载信息缺失"
+def update_task_info(info):
+    ret_path = os.path.join(RESULT_PATH, info['id'] + '.json')
+    with open(ret_path, 'w') as file:
+        json.dump(info, file)
 
+def download_model(info):
+    model_type = info['model_type']
+    filename = info['filename']
+    download_url = info['download_url']
     target_path = get_model_path(model_type)
-    if not target_path:
-        return False, f"暂不支持这种类型：{model_type}"
-
     target_file = os.path.join(target_path, filename)
-    if os.path.exists(target_file):
-        return False, f"已经存在了，不重复下载：\n{target_file}"
+    output_path = os.path.join(RESULT_PATH, info['id'] + '.out')
 
-    cmd = f'curl -o "{target_file}" "{url}" 2>&1 > {output_path}'
+    cmd = f'curl -o "{target_file}" "{download_url}" 2>&1 > {output_path}'
     if check_aria2c():
-        cmd = f'aria2c -c -x 16 -s 16 -k 1M -d "{target_path}" -o "{filename}" "{url}" 2>&1 > {output_path}'
+        cmd = f'aria2c -c -x 16 -s 16 -k 1M -d "{target_path}" -o "{filename}" "{download_url}" 2>&1 > {output_path}'
 
     result = subprocess.run(
         cmd,
@@ -77,13 +74,19 @@ def download_model(model_type, filename, url, output_path):
         stderr=subprocess.PIPE,
         encoding="UTF-8"
     )
+
+    status = ""
     status_output = ""
     if result.returncode == 0:
-        status_output = True, f"下载成功，保存到：\n{target_file}\n{result.stdout}"
+        status = TASK_STATUS['success']
+        status_output = f"下载成功，保存到：\n{target_file}" #\n{result.stdout}"
     else:
-        status_output = False, f"下载失败了，错误信息：\n{result.stdout}"
+        status = TASK_STATUS['failure']
+        status_output = f"下载失败了，错误信息：\n{result.stdout}"
 
-    return status_output
+    info['status'] = status
+    info['status_text'] = status_output
+    update_task_info(info)
 
 
 def on_ui_tabs():
@@ -101,51 +104,54 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
     os.makedirs(RESULT_PATH, exist_ok=True)
 
     @app.post(pre_path + "/download_tasks/")
-    def create_download_task(
+    async def create_download_task(
         model_type: str,
         filename: str,
-        url: str,
-        md5: str | None = None,
-        ref: str | None = None,
+        download_url: str,
+        md5: str | None,
+        ref: str | None,
+        background_tasks: BackgroundTasks,
     ):
+        target_path = get_model_path(model_type)
+        if not target_path:
+            raise HTTPException(
+                status_code=400,
+                detail=f"暂不支持这种类型：{model_type}"
+            )
+
+        target_file = os.path.join(target_path, filename)
+        if os.path.exists(target_file):
+            raise HTTPException(
+                status_code=400,
+                detail=f"已经存在了，不重复下载：{target_file}"
+            )
+
         task_id = str(uuid.uuid4())
         task_info = {
             "id": task_id,
             "model_type": model_type,
             "filename": filename,
-            "url": url,
+            "download_url": download_url,
             "md5": md5,
             "ref": ref,
             "status": TASK_STATUS["downloading"],
             "status_text": "",
         }
+        update_task_info(task_info)
 
-        with open(f"{RESULT_PATH}/{task_id}.json", 'w') as json_file:
-            json.dump(task_info, json_file)
-
-        status, ret = download_model(
-            model_type,
-            filename,
-            url,
-            f"{RESULT_PATH}/{task_id}.out",
+        background_tasks.add_task(
+            download_model,
+            task_info,
         )
-
-        if status:
-            task_info["status"] = TASK_STATUS["success"]
-        else:
-            task_info["status"] = TASK_STATUS["failure"]
-        task_info["status_text"] = ret
-
-        with open(f"{RESULT_PATH}/{task_id}.json", 'w') as json_file:
-            json.dump(task_info, json_file)
 
         return task_id
 
 
     @app.get(pre_path + "/download_tasks/{task_id}")
     def get_download_task(task_id):
-        info_path = f"{RESULT_PATH}/{task_id}.json"
-        output_path = f"{RESULT_PATH}/{task_id}.out"
+        info_path = os.path.join(RESULT_PATH, task_id + '.json')
+        output_path = os.path.join(RESULT_PATH, task_id + '.out')
+
         if not (os.path.exists(info_path) and os.path.exists(output_path)):
             raise HTTPException(status_code=404, detail="task not found")
 
@@ -165,7 +171,7 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
     def get_download_tasks():
         return "TODO"
 
-    static_path = f"{current_path}/../good-to-nie/build"
+    static_path = os.path.join(current_path, '..', 'good-to-nie', 'build')
     app.mount(
         pre_path,
         StaticFiles(directory=static_path),
