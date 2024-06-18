@@ -1,3 +1,5 @@
+> 这个插件暂时没法用了。因为 civitai 修改了逻辑，现在需要登录验证才能拿到下载信息。
+
 ## sd-webui-model-downloader-cn
 
 > 视频演示: https://www.bilibili.com/video/BV11u411a7wB/
